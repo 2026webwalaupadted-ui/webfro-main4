@@ -55,6 +55,119 @@ body {
   line-height: 1.5;
 }
 
+/* ===== NETWORK SPEED INDICATOR ===== */
+.network-speed {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+}
+.network-speed i {
+  color: var(--success);
+}
+.network-speed.slow i {
+  color: var(--warning);
+}
+.network-speed.fast i {
+  color: var(--success);
+}
+
+/* ===== SKELETON LOADER STYLES ===== */
+.skeleton-card {
+  background: white;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.skeleton-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  min-height: 55px;
+}
+
+.skeleton-title {
+  height: 18px;
+  width: 150px;
+  background: var(--gray-200);
+  border-radius: 8px;
+}
+
+.skeleton-chip {
+  height: 28px;
+  width: 80px;
+  background: var(--gray-200);
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-section {
+  padding: 12px 16px;
+}
+
+.skeleton-section-title {
+  height: 16px;
+  width: 120px;
+  background: var(--gray-200);
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+.skeleton-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.skeleton-label {
+  height: 12px;
+  width: 100px;
+  background: var(--gray-200);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.skeleton-value {
+  height: 12px;
+  width: 200px;
+  background: var(--gray-200);
+  border-radius: 4px;
+  flex: 1;
+}
+
 /* ===== COMPACT HEADER ===== */
 .header {
   background: var(--primary-gradient);
@@ -168,6 +281,7 @@ body {
   transition: var(--transition);
   border: 2px solid transparent;
   background: var(--gray-100);
+  cursor: pointer;
 }
 
 .nav a:hover {
@@ -422,151 +536,6 @@ body {
   font-weight: 500;
   font-size: 13px;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
-}
-
-/* ===== LOADER - COMPACT ===== */
-.fullscreen-loader {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
-  z-index: 9999;
-}
-
-.fullscreen-loader.hidden {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.loader {
-  position: relative;
-  width: 70px;
-  height: 70px;
-  margin: 0 auto 16px;
-}
-
-.loader-inner {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  position: relative;
-  animation: rotate 2s linear infinite;
-}
-
-.loader-ring {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-}
-
-.loader-ring:nth-child(1) {
-  border: 5px solid transparent;
-  border-top: 5px solid rgb(0, 94, 255);
-  border-right: 5px solid rgb(0, 94, 255);
-  animation: spin1 1.5s ease-in-out infinite alternate;
-}
-
-.loader-ring:nth-child(2) {
-  border: 4px solid transparent;
-  border-bottom: 4px solid rgb(0, 94, 255);
-  border-left: 4px solid rgb(0, 94, 255);
-  top: 15%;
-  left: 15%;
-  width: 70%;
-  height: 70%;
-  animation: spin2 2s ease-in-out infinite alternate;
-}
-
-.loader-ring:nth-child(3) {
-  border: 3px solid transparent;
-  border-top: 3px solid rgb(0, 94, 255);
-  border-right: 3px solid rgb(0, 94, 255);
-  top: 25%;
-  left: 25%;
-  width: 50%;
-  height: 50%;
-  animation: spin3 2.5s ease-in-out infinite alternate;
-}
-
-.loader-core {
-  position: absolute;
-  top: 40%;
-  left: 40%;
-  width: 20%;
-  height: 20%;
-  background: var(--primary);
-  border-radius: 50%;
-  animation: pulse-core 1.5s ease-in-out infinite alternate;
-  box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
-}
-
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes spin1 {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(720deg); }
-}
-
-@keyframes spin2 {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(-720deg); }
-}
-
-@keyframes spin3 {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes pulse-core {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-}
-
-.loading-text {
-  color: var(--primary-dark);
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 14px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.loader-progress {
-  width: 220px;
-  height: 3px;
-  background: var(--gray-200);
-  border-radius: 3px;
-  margin-top: 14px;
-  overflow: hidden;
-}
-
-.loader-progress-bar {
-  height: 100%;
-  background: var(--primary-gradient);
-  border-radius: 3px;
-  width: 0%;
-  animation: progress-load 2s ease-in-out infinite alternate;
-}
-
-@keyframes progress-load {
-  0% {
-    width: 10%;
-    transform: translateX(-10%);
-  }
-  100% {
-    width: 90%;
-    transform: translateX(110%);
-  }
 }
 
 /* ===== AUTH ERROR MESSAGE ===== */
@@ -886,6 +855,13 @@ body {
   .auth-error p {
     font-size: 13px;
   }
+  
+  .network-speed {
+    bottom: 10px;
+    left: 10px;
+    font-size: 10px;
+    padding: 4px 10px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -951,13 +927,11 @@ body {
     font-size: 13px;
   }
   
-  .loader {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .loading-text {
-    font-size: 14px;
+  .network-speed {
+    bottom: 8px;
+    left: 8px;
+    font-size: 9px;
+    padding: 3px 8px;
   }
 }
 
@@ -985,19 +959,10 @@ body {
 
 <body>
 
-<div class="fullscreen-loader" id="fullscreenLoader">
-  <div class="loading-text">Loading Groups...</div>
-  <div class="loader">
-    <div class="loader-inner">
-      <div class="loader-ring"></div>
-      <div class="loader-ring"></div>
-      <div class="loader-ring"></div>
-      <div class="loader-core"></div>
-    </div>
-  </div>
-  <div class="loader-progress">
-    <div class="loader-progress-bar"></div>
-  </div>
+<!-- Network Speed Indicator -->
+<div class="network-speed" id="networkSpeed">
+  <i class="fas fa-wifi"></i>
+  <span id="networkSpeedText">Checking network...</span>
 </div>
 
 <!-- AUTH ERROR MESSAGE (HIDDEN BY DEFAULT) -->
@@ -1058,7 +1023,7 @@ body {
 <!-- MAIN CONTENT -->
 <div class="main-content">
   <div class="groups" id="dataContainer">
-    <!-- Groups will be loaded here -->
+    <!-- Groups will be loaded here - skeleton loaders shown initially -->
   </div>
   
   <!-- PAGINATION -->
@@ -1100,13 +1065,123 @@ let grouped = {};
 let allUIDs = [];
 let filteredUIDs = [];
 let currentPage = 1;
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10; // Reduced for smoother loading
 let isLoading = false;
 let isLoadingMore = false;
+
+// Network speed detection
+let networkSpeed = 'fast'; // 'slow', 'medium', 'fast'
+let connectionType = '4g';
+let adaptiveBatchSize = 10;
+let adaptiveDelay = 0;
 
 // Scroll Position Restoration
 let scrollPosition = 0;
 let isRestoringState = false;
+
+/* ===== NETWORK SPEED DETECTION ===== */
+function detectNetworkSpeed() {
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (connection) {
+    const effectiveType = connection.effectiveType; // 'slow-2g', '2g', '3g', '4g'
+    const downlink = connection.downlink; // Mbps
+    const rtt = connection.rtt; // ms
+    
+    connectionType = effectiveType;
+    
+    if (effectiveType === 'slow-2g' || effectiveType === '2g' || downlink < 0.5) {
+      networkSpeed = 'slow';
+      adaptiveBatchSize = 5;
+      adaptiveDelay = 800;
+    } else if (effectiveType === '3g' || downlink < 1.5) {
+      networkSpeed = 'medium';
+      adaptiveBatchSize = 8;
+      adaptiveDelay = 400;
+    } else {
+      networkSpeed = 'fast';
+      adaptiveBatchSize = 12;
+      adaptiveDelay = 0;
+    }
+    
+    // Update UI
+    const speedIndicator = document.getElementById('networkSpeed');
+    const speedText = document.getElementById('networkSpeedText');
+    if (speedIndicator && speedText) {
+      speedText.textContent = `${effectiveType.toUpperCase()} (${downlink} Mbps)`;
+      speedIndicator.className = `network-speed ${networkSpeed}`;
+    }
+    
+    console.log(`📶 Network: ${effectiveType}, Speed: ${networkSpeed}, Batch: ${adaptiveBatchSize}, Delay: ${adaptiveDelay}ms`);
+  } else {
+    // Default to fast if connection API not available
+    networkSpeed = 'fast';
+    adaptiveBatchSize = 12;
+    adaptiveDelay = 0;
+  }
+}
+
+// Listen for network changes
+if ('connection' in navigator) {
+  const connection = navigator.connection;
+  connection.addEventListener('change', detectNetworkSpeed);
+}
+
+/* ===== SKELETON LOADER FUNCTIONS ===== */
+function showSkeletonLoaders(count = adaptiveBatchSize) {
+  const container = document.getElementById("dataContainer");
+  if (!container) return;
+  
+  container.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const skeleton = document.createElement('div');
+    skeleton.className = 'skeleton-card';
+    skeleton.innerHTML = `
+      <div class="skeleton-header-row">
+        <div class="skeleton-title"></div>
+        <div class="skeleton-chip"></div>
+      </div>
+      <div class="skeleton-section">
+        <div class="skeleton-section-title"></div>
+        <div class="skeleton-item">
+          <div class="skeleton-label"></div>
+          <div class="skeleton-value"></div>
+        </div>
+        <div class="skeleton-item">
+          <div class="skeleton-label"></div>
+          <div class="skeleton-value"></div>
+        </div>
+        <div class="skeleton-section-title"></div>
+        <div class="skeleton-item">
+          <div class="skeleton-label"></div>
+          <div class="skeleton-value"></div>
+        </div>
+        <div class="skeleton-item">
+          <div class="skeleton-label"></div>
+          <div class="skeleton-value"></div>
+        </div>
+      </div>
+    `;
+    container.appendChild(skeleton);
+  }
+}
+
+/* ===== ADAPTIVE FETCH ===== */
+async function adaptiveFetch(url, options = {}) {
+  const startTime = Date.now();
+  
+  // Add artificial delay for slow networks to simulate progressive loading
+  if (adaptiveDelay > 0) {
+    await new Promise(resolve => setTimeout(resolve, adaptiveDelay));
+  }
+  
+  const response = await fetch(url, options);
+  const endTime = Date.now();
+  const loadTime = endTime - startTime;
+  
+  console.log(`📡 Load time: ${loadTime}ms for ${networkSpeed} network`);
+  
+  return response;
+}
 
 /* ===== NAVIGATION FUNCTIONS ===== */
 window.navigateTo = function(page) {
@@ -1178,8 +1253,6 @@ async function verifyTokenWithServer() {
 }
 
 function showAuthError(message) {
-  hideLoader();
-  
   const authError = document.getElementById('authError');
   const authErrorBtn = document.getElementById('authErrorBtn');
   
@@ -1202,29 +1275,6 @@ function showAuthError(message) {
   if (mainContent) mainContent.style.display = 'none';
   if (nav) nav.style.display = 'none';
   if (searchBar) searchBar.style.display = 'none';
-}
-
-function showLoader() {
-  const loader = document.getElementById("fullscreenLoader");
-  if (loader) {
-    loader.classList.remove("hidden");
-    loader.style.display = 'flex';
-  }
-}
-
-function hideLoader() {
-  const loader = document.getElementById("fullscreenLoader");
-  if (loader) {
-    setTimeout(() => {
-      loader.classList.add("hidden");
-      
-      setTimeout(() => {
-        if (loader.parentNode) {
-          loader.style.display = 'none';
-        }
-      }, 400);
-    }, 300);
-  }
 }
 
 function saveCurrentState() {
@@ -1348,6 +1398,9 @@ function renderCurrentPage() {
   const startIndex = (currentPage - 1) * PAGE_SIZE;
   const uidsToShow = filteredUIDs.slice(startIndex, endIndex);
 
+  // Use document fragment for batch rendering
+  const fragment = document.createDocumentFragment();
+
   uidsToShow.forEach(uid => {
     const u = grouped[uid];
     if (!u) return;
@@ -1416,8 +1469,10 @@ function renderCurrentPage() {
 
     html += `</div>`;
     card.innerHTML = html;
-    box.appendChild(card);
+    fragment.appendChild(card);
   });
+
+  box.appendChild(fragment);
 
   const paginationDiv = document.getElementById("paginationContainer");
   paginationDiv.style.display = 'flex';
@@ -1524,6 +1579,7 @@ function loadMoreData() {
   loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading more groups...';
   document.getElementById('dataContainer').appendChild(loadingDiv);
   
+  // Add network-based delay for smoother loading
   setTimeout(() => {
     currentPage++;
     
@@ -1535,7 +1591,7 @@ function loadMoreData() {
     saveCurrentState();
     
     isLoadingMore = false;
-  }, 500); // Small delay for better UX
+  }, networkSpeed === 'slow' ? 500 : networkSpeed === 'medium' ? 250 : 150);
 }
 
 function updateTotalCount() {
@@ -1548,7 +1604,7 @@ function updatePaginationInfo() {
   const total = filteredUIDs.length;
   const showing = Math.min(currentPage * PAGE_SIZE, total);
   const pageInfo = document.getElementById('pageInfo');
-  if (pageInfo) pageInfo.textContent = `Showing ${showing} of ${total} users`;
+  if (pageInfo) pageInfo.textContent = `Showing ${showing} of ${total} users (${networkSpeed.toUpperCase()})`;
 }
 
 // Visibility change handler
@@ -1592,16 +1648,18 @@ async function load() {
     // Verify token with server (optional)
     await verifyTokenWithServer();
     
-    showLoader();
-    
     // Load saved state
     const savedState = loadSavedState();
     if (savedState) {
       restoreSavedState(savedState);
     }
     
+    // Show skeleton loaders
+    showSkeletonLoaders(adaptiveBatchSize);
+    
     console.log('📡 Fetching data from:', API_URL);
-    const response = await fetch(API_URL, {
+    // Use adaptive fetch
+    const response = await adaptiveFetch(API_URL, {
       headers: {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json'
@@ -1675,16 +1733,15 @@ async function load() {
     
     const paginationDiv = document.getElementById("paginationContainer");
     if (paginationDiv) paginationDiv.style.display = 'none';
-    
-  } finally {
-    // Hide loader when done
-    setTimeout(hideLoader, 600);
   }
 }
 
 /* ===== INITIALIZATION ===== */
 document.addEventListener('DOMContentLoaded', function() {
   console.log("🚀 DOM Content Loaded");
+  
+  // Detect network speed first
+  detectNetworkSpeed();
   
   // Get DOM elements
   const searchInput = document.getElementById("search");
@@ -1747,14 +1804,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Start loading data
   load();
   
-  // Auto-save state periodically
   setInterval(saveCurrentState, 5000);
 });
 
-// Make functions available globally for inline handlers
 window.search = search;
 window.loadMoreData = loadMoreData;
 window.navigateTo = navigateTo;

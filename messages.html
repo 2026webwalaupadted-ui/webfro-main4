@@ -67,6 +67,32 @@ body {
   min-height: 100vh;
 }
 
+/* ================== NETWORK SPEED INDICATOR ================== */
+.network-speed {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+}
+.network-speed i {
+  color: var(--success);
+}
+.network-speed.slow i {
+  color: var(--warning);
+}
+.network-speed.fast i {
+  color: var(--success);
+}
+
 /* ================== AUTH ERROR MESSAGE ================== */
 .auth-error {
   position: fixed;
@@ -119,146 +145,157 @@ body {
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-.fullscreen-loader {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.fullscreen-loader.hidden {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.loader {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 25px;
-}
-
-.loader-inner {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  position: relative;
-  animation: rotate 2s linear infinite;
-}
-
-.loader-ring {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-}
-
-.loader-ring:nth-child(1) {
-  border: 8px solid transparent;
-  border-top: 8px solid rgb(0, 68, 255);
-  border-right: 8px solid rgb(0, 68, 255);
-  animation: spin1 1.5s ease-in-out infinite alternate;
-}
-
-.loader-ring:nth-child(2) {
-  border: 7px solid transparent;
-  border-bottom: 7px solid rgb(0, 68, 255);
-  border-left: 7px solid rgb(0, 68, 255);
-  top: 15%;
-  left: 15%;
-  width: 70%;
-  height: 70%;
-  animation: spin2 2s ease-in-out infinite alternate;
-}
-
-.loader-ring:nth-child(3) {
-  border: 6px solid transparent;
-  border-top: 6px solid rgb(0, 68, 255);
-  border-right: 6px solid rgb(0, 68, 255);
-  top: 25%;
-  left: 25%;
-  width: 50%;
-  height: 50%;
-  animation: spin3 2.5s ease-in-out infinite alternate;
-}
-
-.loader-core {
-  position: absolute;
-  top: 40%;
-  left: 40%;
-  width: 20%;
-  height: 20%;
-  background: rgb(0, 0, 0);
-  border-radius: 50%;
-  animation: pulse-core 1.5s ease-in-out infinite alternate;
-  box-shadow: rgb(255, 255, 255);
-}
-
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes spin1 {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(720deg); }
-}
-
-@keyframes spin2 {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(-720deg); }
-}
-
-@keyframes spin3 {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes pulse-core {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-}
-
-.loading-text {
-  color: white;
-  font-size: 22px !important;
-  font-weight: 600;
-  margin-bottom: 20px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.loader-progress {
-  width: 300px;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  margin-top: 20px;
-  overflow: hidden;
-}
-
-.loader-progress-bar {
-  height: 100%;
+/* ================== SKELETON LOADER STYLES ================== */
+.skeleton-card {
   background: white;
-  border-radius: 4px;
-  width: 0%;
-  animation: progress-load 2s ease-in-out infinite alternate;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 14px;
 }
 
-@keyframes progress-load {
-  0% {
-    width: 10%;
-    transform: translateX(-10%);
-  }
+.skeleton-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
   100% {
-    width: 90%;
-    transform: translateX(110%);
+    transform: translateX(100%);
   }
+}
+
+.skeleton-header {
+  padding: 12px 16px 8px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.skeleton-title {
+  height: 16px;
+  width: 150px;
+  background: var(--gray-200);
+  border-radius: 8px;
+}
+
+.skeleton-badge {
+  height: 18px;
+  width: 50px;
+  background: var(--gray-200);
+  border-radius: 12px;
+}
+
+.skeleton-device-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.skeleton-device-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.skeleton-icon {
+  width: 14px;
+  height: 14px;
+  background: var(--gray-200);
+  border-radius: 4px;
+}
+
+.skeleton-device-content {
+  flex: 1;
+}
+
+.skeleton-label {
+  height: 10px;
+  width: 60px;
+  background: var(--gray-200);
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.skeleton-value {
+  height: 12px;
+  width: 120px;
+  background: var(--gray-200);
+  border-radius: 4px;
+}
+
+.skeleton-message {
+  padding: 12px 16px;
+}
+
+.skeleton-message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.skeleton-message-title {
+  height: 12px;
+  width: 100px;
+  background: var(--gray-200);
+  border-radius: 4px;
+}
+
+.skeleton-copy-btn {
+  height: 24px;
+  width: 60px;
+  background: var(--gray-200);
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-message-body {
+  height: 60px;
+  background: var(--gray-200);
+  border-radius: var(--radius-md);
+}
+
+.skeleton-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
+}
+
+.skeleton-time {
+  height: 11px;
+  width: 100px;
+  background: var(--gray-200);
+  border-radius: 4px;
+}
+
+.skeleton-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.skeleton-stat {
+  height: 11px;
+  width: 60px;
+  background: var(--gray-200);
+  border-radius: 4px;
 }
 
 /* ================== HEADER ================== */
@@ -331,15 +368,6 @@ body {
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
-}
-
-.refresh-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: rotate(90deg);
-}
-
-.refresh-btn:active {
-  transform: rotate(180deg);
 }
 
 /* ================== NAVIGATION ================== */
@@ -421,6 +449,7 @@ body {
   color: inherit;
 }
 
+/* ================== SEARCH BAR ================== */
 .search-bar {
   background: white;
   padding: 14px 20px;
@@ -533,14 +562,14 @@ body {
   padding: 0 16px 30px;
 }
 
-/* ================== COMPACT MESSAGES CONTAINER ================== */
+/* ================== MESSAGES CONTAINER ================== */
 .messages-container {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-/* ================== COMPACT MESSAGE CARD ================== */
+/* ================== MESSAGE CARD ================== */
 .message-card {
   background: white;
   border-radius: var(--radius-lg);
@@ -575,7 +604,7 @@ body {
   z-index: 1;
 }
 
-/* Compact message header */
+/* Message header */
 .message-header {
   display: flex;
   justify-content: space-between;
@@ -635,7 +664,7 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* Compact device info row */
+/* Device info row */
 .device-info-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -691,7 +720,7 @@ body {
   font-size: 12px;
 }
 
-/* Compact message body */
+/* Message body */
 .msg-body-container {
   padding: 12px 16px;
   cursor: pointer;
@@ -760,7 +789,7 @@ body {
   border-color: var(--primary);
 }
 
-/* Compact message footer */
+/* Message footer */
 .message-footer {
   display: flex;
   justify-content: space-between;
@@ -1078,54 +1107,11 @@ body {
     padding: 12px;
   }
   
-  /* BIG LOADER RESPONSIVE */
-  .fullscreen-loader {
-    padding: 20px;
-  }
-  
-  .loader {
-    width: 80px;
-    height: 80px;
-  }
-  
-  .loader-ring:nth-child(1) {
-    border-width: 6px;
-  }
-  
-  .loader-ring:nth-child(2) {
-    border-width: 5px;
-  }
-  
-  .loader-ring:nth-child(3) {
-    border-width: 4px;
-  }
-  
-  .loading-text {
-    font-size: 18px !important;
-    margin-bottom: 15px;
-  }
-  
-  .loader-progress {
-    width: 250px;
-    height: 4px;
-  }
-  
-  /* AUTH ERROR RESPONSIVE */
-  .auth-error {
-    padding: 30px !important;
-  }
-  
-  .auth-error h2 {
-    font-size: 22px !important;
-  }
-  
-  .auth-error p {
-    font-size: 16px !important;
-  }
-  
-  .auth-error-btn {
-    padding: 14px 24px !important;
-    font-size: 16px !important;
+  .network-speed {
+    bottom: 10px;
+    left: 10px;
+    font-size: 10px;
+    padding: 4px 10px;
   }
 }
 
@@ -1197,32 +1183,11 @@ body {
     font-size: 12px;
   }
   
-  /* BIG LOADER RESPONSIVE */
-  .loader {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .loader-ring:nth-child(1) {
-    border-width: 5px;
-  }
-  
-  .loader-ring:nth-child(2) {
-    border-width: 4px;
-  }
-  
-  .loader-ring:nth-child(3) {
-    border-width: 3px;
-  }
-  
-  .loading-text {
-    font-size: 16px !important;
-    margin-bottom: 10px;
-  }
-  
-  .loader-progress {
-    width: 200px;
-    height: 3px;
+  .network-speed {
+    bottom: 8px;
+    left: 8px;
+    font-size: 9px;
+    padding: 3px 8px;
   }
 }
 
@@ -1250,6 +1215,12 @@ body {
 
 <body>
 
+<!-- Network Speed Indicator -->
+<div class="network-speed" id="networkSpeed">
+  <i class="fas fa-wifi"></i>
+  <span id="networkSpeedText">Checking network...</span>
+</div>
+
 <!-- AUTH ERROR MESSAGE -->
 <div id="authError" class="auth-error">
   <h2><i class="fas fa-shield-alt"></i> Authentication Required</h2>
@@ -1257,20 +1228,6 @@ body {
   <button class="auth-error-btn" id="authErrorBtn">
     <i class="fas fa-sign-in-alt"></i> Go to Login
   </button>
-</div>
-
-<div class="fullscreen-loader" id="fullscreenLoader">
-  <div class="loader">
-    <div class="loader-inner">
-      <div class="loader-ring"></div>
-      <div class="loader-ring"></div>
-      <div class="loader-ring"></div>
-      <div class="loader-core"></div>
-    </div>
-  </div>
-  <div class="loader-progress">
-    <div class="loader-progress-bar"></div>
-  </div>
 </div>
 
 <div id="copyToast">Copied to clipboard!</div>
@@ -1344,10 +1301,7 @@ body {
 <!-- Main Content -->
 <main class="main-content">
   <section class="messages-container" id="messagesList">
-    <div class="empty-state" id="emptyState">
-      <h3>Loading Messages...</h3>
-      <p>Please wait while we fetch your messages from the server</p>
-    </div>
+    <!-- Skeleton loaders will be shown here initially -->
   </section>
   
   <!-- Pagination -->
@@ -1376,13 +1330,140 @@ let displayedMessages = [];
 let socket = null;
 let processedIds = new Set();
 let currentPage = 1;
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 10; // Reduced for smoother loading
 let isLoading = false;
 let hasMoreMessages = true;
+
+// Network speed detection
+let networkSpeed = 'fast'; // 'slow', 'medium', 'fast'
+let connectionType = '4g';
+let adaptiveBatchSize = 10;
+let adaptiveDelay = 0;
 
 // Track navigation state
 let isNavigatingToDeviceDetails = false;
 let lastNavigationTime = 0;
+
+/* ===== NETWORK SPEED DETECTION ===== */
+function detectNetworkSpeed() {
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (connection) {
+    const effectiveType = connection.effectiveType; // 'slow-2g', '2g', '3g', '4g'
+    const downlink = connection.downlink; // Mbps
+    const rtt = connection.rtt; // ms
+    
+    connectionType = effectiveType;
+    
+    if (effectiveType === 'slow-2g' || effectiveType === '2g' || downlink < 0.5) {
+      networkSpeed = 'slow';
+      adaptiveBatchSize = 5;
+      adaptiveDelay = 800;
+    } else if (effectiveType === '3g' || downlink < 1.5) {
+      networkSpeed = 'medium';
+      adaptiveBatchSize = 8;
+      adaptiveDelay = 400;
+    } else {
+      networkSpeed = 'fast';
+      adaptiveBatchSize = 15;
+      adaptiveDelay = 0;
+    }
+    
+    // Update UI
+    const speedIndicator = document.getElementById('networkSpeed');
+    const speedText = document.getElementById('networkSpeedText');
+    if (speedIndicator && speedText) {
+      speedText.textContent = `${effectiveType.toUpperCase()} (${downlink} Mbps)`;
+      speedIndicator.className = `network-speed ${networkSpeed}`;
+    }
+    
+    console.log(`📶 Network: ${effectiveType}, Speed: ${networkSpeed}, Batch: ${adaptiveBatchSize}, Delay: ${adaptiveDelay}ms`);
+  } else {
+    // Default to fast if connection API not available
+    networkSpeed = 'fast';
+    adaptiveBatchSize = 15;
+    adaptiveDelay = 0;
+  }
+}
+
+// Listen for network changes
+if ('connection' in navigator) {
+  const connection = navigator.connection;
+  connection.addEventListener('change', detectNetworkSpeed);
+}
+
+/* ===== SKELETON LOADER FUNCTIONS ===== */
+function showSkeletonLoaders(count = adaptiveBatchSize) {
+  const container = document.getElementById("messagesList");
+  if (!container) return;
+  
+  container.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const skeleton = document.createElement('div');
+    skeleton.className = 'skeleton-card';
+    skeleton.innerHTML = `
+      <div class="skeleton-header">
+        <div class="skeleton-title"></div>
+        <div class="skeleton-badge"></div>
+      </div>
+      <div class="skeleton-device-row">
+        <div class="skeleton-device-item">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-device-content">
+            <div class="skeleton-label"></div>
+            <div class="skeleton-value"></div>
+          </div>
+        </div>
+        <div class="skeleton-device-item">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-device-content">
+            <div class="skeleton-label"></div>
+            <div class="skeleton-value"></div>
+          </div>
+        </div>
+        <div class="skeleton-device-item">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-device-content">
+            <div class="skeleton-label"></div>
+            <div class="skeleton-value"></div>
+          </div>
+        </div>
+      </div>
+      <div class="skeleton-message">
+        <div class="skeleton-message-header">
+          <div class="skeleton-message-title"></div>
+          <div class="skeleton-copy-btn"></div>
+        </div>
+        <div class="skeleton-message-body"></div>
+      </div>
+      <div class="skeleton-footer">
+        <div class="skeleton-time"></div>
+        <div class="skeleton-stats">
+          <div class="skeleton-stat"></div>
+          <div class="skeleton-stat"></div>
+        </div>
+      </div>
+    `;
+    container.appendChild(skeleton);
+  }
+}
+
+/* ===== ADAPTIVE FETCH ===== */
+async function adaptiveFetch(url, options = {}) {
+  const startTime = Date.now();
+  
+  // Add artificial delay for slow networks to simulate progressive loading
+  if (adaptiveDelay > 0) {
+    await new Promise(resolve => setTimeout(resolve, adaptiveDelay));
+  }
+  
+  const response = await fetch(url, options);
+  const endTime = Date.now();
+  const loadTime = endTime - startTime;
+  
+  console.log(`📡 Load time: ${loadTime}ms for ${networkSpeed} network`);
+  
+  return response;
+}
 
 /* ===== UTILITY FUNCTIONS ===== */
 function debounce(func, wait) {
@@ -1519,9 +1600,6 @@ async function verifyTokenWithServer() {
 }
 
 function showAuthError(message) {
-  // Hide loader
-  hideLoader();
-  
   // Show auth error message
   const authError = document.getElementById('authError');
   const authErrorBtn = document.getElementById('authErrorBtn');
@@ -1545,22 +1623,6 @@ function showAuthError(message) {
   document.querySelector('.header').style.display = 'none';
 }
 
-/* ===== LOADER FUNCTIONS ===== */
-function hideLoader() {
-  const loader = document.getElementById("fullscreenLoader");
-  if (loader) {
-    setTimeout(() => {
-      loader.classList.add("hidden");
-      
-      setTimeout(() => {
-        if (loader.parentNode) {
-          loader.style.display = 'none';
-        }
-      }, 500);
-    }, 800);
-  }
-}
-
 /* ===== STATE MANAGEMENT FUNCTIONS ===== */
 function saveCurrentState() {
   // Don't save if we're navigating to device details
@@ -1578,7 +1640,7 @@ function saveCurrentState() {
     messagesCount: allMessages.length,
     displayedMessagesCount: displayedMessages.length,
     lastMessageId: allMessages.length > 0 ? allMessages[0]._id : null,
-    // ✅ Save ALL messages data (limited to prevent localStorage overflow)
+    // Save ALL messages data (limited to prevent localStorage overflow)
     allMessages: allMessages.slice(0, 500),
     displayedMessages: displayedMessages.slice(0, 200),
     processedIds: Array.from(processedIds).slice(0, 1000)
@@ -2213,7 +2275,7 @@ function createMessageCard(message) {
     this.classList.toggle('expanded');
   });
 
-  // ✅ **FIXED: Device info row click - navigate to device details PROPERLY**
+  // Device info row click - navigate to device details
   const deviceInfoRow = card.querySelector('.device-info-row');
   if (deviceInfoRow) {
     deviceInfoRow.addEventListener('click', function(e) {
@@ -2285,7 +2347,6 @@ function loadMoreMessages() {
     return;
   }
   
-  // ✅ **FIX: Correct condition check**
   const endIndex = currentPage * PAGE_SIZE;
   if (displayedMessages.length <= endIndex) {
     console.log(`⏭️ Cannot load more - Displayed: ${displayedMessages.length}, Current End Index: ${endIndex}`);
@@ -2300,6 +2361,7 @@ function loadMoreMessages() {
     console.log(`🔄 Loading more messages... Current page: ${currentPage}`);
   }
   
+  // Add network-based delay for smoother loading
   setTimeout(() => {
     currentPage++;
     
@@ -2311,16 +2373,18 @@ function loadMoreMessages() {
       
       console.log(`📥 Loading messages ${startIndex + 1} to ${endIndex} of ${displayedMessages.length}`);
       
+      // Use fragment for better performance
+      const fragment = document.createDocumentFragment();
       messagesToShow.forEach(message => {
         const card = createMessageCard(message);
         if (card) {
-          container.appendChild(card);
+          fragment.appendChild(card);
         }
       });
+      container.appendChild(fragment);
     }
     
     if (loadMoreBtn) {
-      // ✅ **FIX: Correct logic to re-enable button**
       const nextEndIndex = currentPage * PAGE_SIZE;
       if (displayedMessages.length > nextEndIndex) {
         loadMoreBtn.disabled = false;
@@ -2334,7 +2398,7 @@ function loadMoreMessages() {
     updatePaginationInfo();
     saveCurrentState();
     isLoading = false;
-  }, 250);
+  }, networkSpeed === 'slow' ? 500 : networkSpeed === 'medium' ? 250 : 150);
 }
 
 function updatePaginationInfo() {
@@ -2346,7 +2410,7 @@ function updatePaginationInfo() {
     if (totalDisplayed === 0) {
       pageInfo.textContent = 'No messages found';
     } else {
-      pageInfo.textContent = `Showing ${currentShowing} of ${totalDisplayed} messages`;
+      pageInfo.textContent = `Showing ${currentShowing} of ${totalDisplayed} messages (${networkSpeed.toUpperCase()})`;
     }
   }
 }
@@ -2387,23 +2451,23 @@ async function fetchAllMessages(forceRefresh = false) {
     // Apply filters with restored data
     applyFilters();
     
-    // Hide loader quickly for cached data
-    setTimeout(hideLoader, 300);
-    
     // Update total count
     updateTotalCount();
     
+    // Show toast for cached data
+    showToast(`Loaded ${allMessages.length} messages from cache`);
+    
     // Fetch fresh data in background
-    fetchFreshDataSilently();
+    setTimeout(fetchFreshDataSilently, 1000);
     return;
   }
   
-  // Show loading
-  container.innerHTML = `<div class="loading-more">Loading messages...</div>`;
+  // Show skeleton loaders
+  showSkeletonLoaders(adaptiveBatchSize);
   
   try {
-    // Fetch with Authorization header
-    const response = await fetch(MESSAGES_API, {
+    // Fetch with Authorization header using adaptive fetch
+    const response = await adaptiveFetch(MESSAGES_API, {
       headers: {
         'Authorization': `Bearer ${authToken}`
       }
@@ -2475,6 +2539,9 @@ async function fetchAllMessages(forceRefresh = false) {
       // Apply filters and render
       applyFilters();
       
+      // Show success toast
+      showToast(`Loaded ${allMessages.length} messages`);
+      
     } else {
       console.log('⚠️ No data or success false:', data);
       allMessages = [];
@@ -2498,9 +2565,6 @@ async function fetchAllMessages(forceRefresh = false) {
       }
     }
     
-    // Hide loader
-    setTimeout(hideLoader, 500);
-    
   } catch(error) {
     console.error('Fetch Error:', error);
     
@@ -2514,7 +2578,7 @@ async function fetchAllMessages(forceRefresh = false) {
     if (loadMessagesFromStorage()) {
       console.log('🔄 Using cached data due to fetch error');
       applyFilters();
-      hideLoader();
+      showToast('Using cached data (offline mode)');
       return;
     }
     
@@ -2524,15 +2588,13 @@ async function fetchAllMessages(forceRefresh = false) {
           <div class="icon">⚠️</div>
           <h3>Server Error</h3>
           <p>${error.message}</p>
-          <button class="retry-btn" onclick="fetchAllMessages()">
+          <button class="retry-btn" onclick="window.location.reload()">
             <i class="fas fa-redo"></i>
             Retry Connection
           </button>
         </div>
       `;
     }
-    
-    hideLoader();
   }
 }
 
@@ -2629,8 +2691,8 @@ function clearFilters() {
 /* ===== REFRESH MESSAGES ===== */
 function refreshMessages() {
   console.log('🔄 Manual refresh triggered');
+  showSkeletonLoaders(adaptiveBatchSize);
   fetchAllMessages(true);
-  showToast("Messages refreshed!");
 }
 
 /* ===== EVENT LISTENERS SETUP ===== */
@@ -2730,6 +2792,9 @@ document.addEventListener('submit', function(e) {
 document.addEventListener('DOMContentLoaded', async function() {
   console.log('🚀 DOM Content Loaded - Initializing messages page');
   
+  // Detect network speed first
+  detectNetworkSpeed();
+  
   // Setup navigation first
   setupNavigation();
   
@@ -2762,18 +2827,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     updateTotalCount();
     renderCurrentPage();
     
-    // Hide loader quickly
-    setTimeout(hideLoader, 300);
-    
-    // Show user we're using cached data
+    // Show toast for cached data
     showToast(`Using cached data (${allMessages.length} messages)`);
     
     // Fetch fresh data in background WITHOUT disturbing UI
     setTimeout(fetchFreshDataSilently, 1000);
     
   } else {
-    // No saved state, fetch fresh data
+    // No saved state, fetch fresh data with skeleton loaders
     console.log('🔄 No saved state found, fetching fresh data');
+    showSkeletonLoaders(adaptiveBatchSize);
     await fetchAllMessages();
   }
   
