@@ -1798,7 +1798,7 @@ let activeDevicesFromSocket = new Map();
 let activeDevicesFromAPI = new Map();
 let socketConnected = false;
 let manualCheckStatus = new Map();
-// ✅ FIXED: Serial management with permanent assignment - CHACHA KA SYSTEM
+// ✅ FIXED: Serial management with permanent assignment
 let permanentSerialsCache = new Map();
 let highestSerialNumber = 0;
 let serialAssignmentQueue = [];
@@ -1815,6 +1815,31 @@ let adaptiveDelay = 0;
 // ✅ Real-time rendering flag
 let isRendering = false;
 console.log("Devices per page:", DEVICES_PER_PAGE);
+
+// ✅ NEW FUNCTION: Format date with time (AM/PM ke saath proper time dikhane ke liye)
+function formatDateTimeWithAMPM(timestamp) {
+  if (!timestamp || timestamp === "0" || timestamp === 0) return "Never";
+  
+  const date = new Date(Number(timestamp));
+  if (isNaN(date.getTime())) return "Never";
+  
+  // Date part: 15 Mar 2024
+  const datePart = date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+  
+  // Time part with AM/PM: 02:30:45 PM
+  const timePart = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+  
+  return `${datePart} ${timePart}`;
+}
 
 // ✅ Network speed detection
 function detectNetworkSpeed() {
@@ -2204,32 +2229,50 @@ function saveSerialCacheToLocalStorage() {
   }
 }
 
-// ✅ CHACHA KA SYSTEM - Get next available serial with proper gap detection
-function getNextAvailableSerial() {
-  const assignedSerials = Array.from(permanentSerialsCache.values())
-    .map(s => s.serialNo)
-    .filter(s => s !== undefined && s !== null)
-    .sort((a, b) => a - b);
- 
-  console.log("📊 Currently assigned serials:", assignedSerials);
- 
-  if (assignedSerials.length === 0) {
-    console.log("🔍 No serials assigned yet, starting from 0");
-    return 0;
-  }
- 
-  // Pehle gaps check karo
-  for (let i = 0; i <= assignedSerials.length; i++) {
-    if (!assignedSerials.includes(i)) {
-      console.log(`🔍 Found missing serial: ${i}`);
-      return i;
-    }
-  }
- 
-  // Agar koi gap nahi hai toh next number do
-  const nextSerial = assignedSerials.length;
-  console.log(`📈 No gaps, assigning next serial: ${nextSerial}`);
-  return nextSerial;
+// ✅ NEW FUNCTION: Sort devices by join time for serial assignment (oldest first)
+function sortDevicesByTimeOldestFirst(devices) {
+  return [...devices].sort((a, b) => {
+    const timeA = Number(a.joinedAt || a.installTime || a.timestamp || 0);
+    const timeB = Number(b.joinedAt || b.installTime || b.timestamp || 0);
+    return timeA - timeB; // Ascending - oldest first
+  });
+}
+
+// ✅ FIXED: Serial assignment based on join time (oldest gets 0, newest gets highest)
+function assignSerialsByTime(devices) {
+  console.log(`🔢 Assigning serials based on join time (oldest first)`);
+  
+  // Pehle devices ko time ke hisaab se sort karo (oldest first)
+  const sortedDevices = sortDevicesByTimeOldestFirst(devices);
+  
+  // Har device ko serial assign karo based on its position
+  sortedDevices.forEach((device, index) => {
+    if (!device.id) return;
+    
+    // Serial number = index (oldest = 0, newest = length-1)
+    const serialNo = index;
+    
+    const serialInfo = {
+      serialNo: serialNo,
+      deviceId: device.id,
+      deviceName: device.brand || device.model || device.id,
+      joinedTime: Number(device.joinedAt || device.installTime || Date.now()),
+      assignedAt: Date.now(),
+      isPermanent: true,
+      assignedNow: true
+    };
+    
+    permanentSerialsCache.set(device.id, serialInfo);
+    device.serialNo = serialNo;
+    device.serialTimestamp = Date.now();
+    
+    console.log(`✅ Device ${device.id} (${device.brand}) - Joined: ${formatDateTimeWithAMPM(device.joinedAt)} - Serial: ${serialNo}`);
+  });
+  
+  highestSerialNumber = devices.length - 1;
+  console.log(`📈 Highest serial number: ${highestSerialNumber}`);
+  
+  saveSerialCacheToLocalStorage();
 }
 
 // ✅ NEW FUNCTION: Real-time render single device
@@ -2276,106 +2319,13 @@ function renderSingleDevice(deviceId) {
   }
 }
 
-// ✅ CHACHA KA SYSTEM - Process serial assignment queue one by one with real-time rendering
-async function processSerialQueue() {
-  if (isProcessingSerialQueue || serialAssignmentQueue.length === 0) {
-    return;
-  }
- 
-  isProcessingSerialQueue = true;
-  console.log(`🔄 Processing serial queue: ${serialAssignmentQueue.length} devices`);
- 
-  // Ek ek karke process karo
-  while (serialAssignmentQueue.length > 0) {
-    const device = serialAssignmentQueue.shift();
-    if (!device || !device.id) continue;
-   
-    try {
-      // Pehle check karo cache mein hai kya
-      if (permanentSerialsCache.has(device.id)) {
-        const cachedSerial = permanentSerialsCache.get(device.id);
-        device.serialNo = cachedSerial.serialNo;
-        device.serialTimestamp = cachedSerial.assignedAt;
-        console.log(`📝 Using cached serial ${cachedSerial.serialNo} for ${device.id}`);
-        
-        // ✅ Real-time render - update existing card
-        renderSingleDevice(device.id);
-        continue;
-      }
-     
-      // Naya serial assign karo
-      const nextSerial = getNextAvailableSerial();
-     
-      const serialInfo = {
-        serialNo: nextSerial,
-        deviceId: device.id,
-        deviceName: device.brand || device.model || device.id,
-        joinedTime: Number(device.joinedAt || device.installTime || Date.now()),
-        assignedAt: Date.now(),
-        isPermanent: true,
-        assignedNow: true
-      };
-     
-      permanentSerialsCache.set(device.id, serialInfo);
-     
-      if (nextSerial > highestSerialNumber) {
-        highestSerialNumber = nextSerial;
-      }
-     
-      console.log(`🔢 Assigned new serial ${nextSerial} to ${device.id} (${device.brand || 'Unknown'})`);
-     
-      device.serialNo = nextSerial;
-      device.serialTimestamp = Date.now();
-     
-      // Backend mein save karo
-      await saveSerialToBackend(device.id, nextSerial);
-      
-      // ✅ Real-time render - update card with new serial
-      renderSingleDevice(device.id);
-     
-      // Thoda delay do taaki backend properly process kare
-      await new Promise(resolve => setTimeout(resolve, 200));
-     
-    } catch (error) {
-      console.error(`❌ Error processing serial for ${device.id}:`, error);
-    }
-  }
- 
-  isProcessingSerialQueue = false;
-  console.log("✅ Serial queue processing completed");
- 
-  saveSerialCacheToLocalStorage();
-  
-  // Final sort and re-render to maintain order
-  allDevices = sortDevicesForDisplay(allDevices);
-  const currentSearch = document.getElementById("search")?.value.toLowerCase() || '';
-  renderList(currentSearch);
-}
-
-function addToSerialQueue(device) {
-  if (!device || !device.id) return;
- 
-  // Already in queue?
-  const alreadyInQueue = serialAssignmentQueue.some(d => d.id === device.id);
-  if (alreadyInQueue) return;
- 
-  // Already has serial?
-  if (permanentSerialsCache.has(device.id)) return;
- 
-  serialAssignmentQueue.push(device);
-  console.log(`📝 Added ${device.id} (${device.brand || 'Unknown'}) to serial queue (queue size: ${serialAssignmentQueue.length})`);
- 
-  // Queue process karo agar already processing nahi hai
-  if (!isProcessingSerialQueue) {
-    setTimeout(() => processSerialQueue(), 500);
-  }
-}
-
+// ✅ UPDATED: Process devices for serials - now uses time-based assignment
 function processDevicesForSerials(devices) {
   console.log(`🔍 Processing ${devices.length} devices for serial assignment`);
  
   let devicesWithoutSerial = 0;
   let devicesWithSerial = 0;
+  let devicesToAssign = [];
  
   devices.forEach(device => {
     if (!device.id) return;
@@ -2412,16 +2362,35 @@ function processDevicesForSerials(devices) {
       console.log(`✅ Using cached serial ${cachedSerial.serialNo} for ${device.id}`);
      
     } else {
-      // Naya device hai, queue mein daalo
+      // Naya device hai, assign karo
       devicesWithoutSerial++;
-      addToSerialQueue(device);
+      devicesToAssign.push(device);
     }
   });
  
   console.log(`📊 Devices with serials: ${devicesWithSerial}, without serials: ${devicesWithoutSerial}`);
  
-  if (devicesWithoutSerial > 0) {
-    console.log(`⏳ Starting serial assignment for ${devicesWithoutSerial} devices...`);
+  if (devicesToAssign.length > 0) {
+    console.log(`⏳ Assigning serials for ${devicesToAssign.length} new devices...`);
+    
+    // Pehle se existing serials ko cache mein rakho
+    const existingDevices = devices.filter(d => permanentSerialsCache.has(d.id));
+    
+    // Sab devices ko combine karo (existing + new) aur time ke hisaab se sort karo
+    const allDevicesForSorting = [...existingDevices, ...devicesToAssign];
+    
+    // Serial assign karo based on join time
+    assignSerialsByTime(allDevicesForSorting);
+    
+    // Ab sab devices mein serial update karo
+    devicesToAssign.forEach(device => {
+      if (permanentSerialsCache.has(device.id)) {
+        const serialInfo = permanentSerialsCache.get(device.id);
+        device.serialNo = serialInfo.serialNo;
+        device.serialTimestamp = serialInfo.assignedAt;
+        console.log(`🔢 Assigned serial ${serialInfo.serialNo} to ${device.id} (${device.brand})`);
+      }
+    });
   }
  
   // Highest serial number update karo
@@ -2432,34 +2401,28 @@ function processDevicesForSerials(devices) {
   }
 }
 
+// ✅ FIXED: Proper sorting by join time (newest first - for display)
+// Latest time wala TOP par, oldest time wala BOTTOM par
 function sortDevicesForDisplay(devices) {
-  console.log(`🔁 Sorting ${devices.length} devices by serial number (DESC)`);
+  console.log(`🔁 Sorting ${devices.length} devices by join time (DESC - newest first)`);
  
   const devicesCopy = [...devices];
  
   devicesCopy.sort((a, b) => {
-    const serialA = a.serialNo !== undefined && a.serialNo !== null ? a.serialNo : -1;
-    const serialB = b.serialNo !== undefined && b.serialNo !== null ? b.serialNo : -1;
-   
-    if (serialA >= 0 && serialB >= 0) {
-      return serialB - serialA;
-    }
-   
-    if (serialA >= 0) {
-      return -1;
-    }
-   
-    if (serialB >= 0) {
-      return 1;
-    }
-   
-    const timeA = Number(a.timestamp || a.lastUpdated || a.joinedAt || a.installTime || 0);
-    const timeB = Number(b.timestamp || b.lastUpdated || b.joinedAt || b.installTime || 0);
+    // Pehle join time se sort karo (latest time wala top par)
+    const timeA = Number(a.joinedAt || a.installTime || a.timestamp || a.lastUpdated || 0);
+    const timeB = Number(b.joinedAt || b.installTime || b.timestamp || b.lastUpdated || 0);
+    
+    // Descending order - bada time (latest) pehle aayega
     return timeB - timeA;
   });
  
-  console.log("📊 Serial distribution:",
-    devicesCopy.slice(0, 3).map(d => ({serial: d.serialNo, name: d.brand})));
+  console.log("📊 Display order (top to bottom):",
+    devicesCopy.slice(0, 3).map(d => ({
+      name: d.brand,
+      serial: d.serialNo,
+      time: formatDateTimeWithAMPM(d.joinedAt || d.installTime || 0)
+    })));
  
   return devicesCopy;
 }
@@ -2838,19 +2801,6 @@ function formatTime(timestamp) {
   if (diffMins < 60) return `${diffMins} min ago`;
   if (diffHours < 24) return `${diffHours} hours ago`;
   if (diffDays < 30) return `${diffDays} days ago`;
- 
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
-}
-
-function formatDateOnly(timestamp) {
-  if (!timestamp || timestamp === "0" || timestamp === 0) return "Unknown";
- 
-  const date = new Date(Number(timestamp));
-  if (isNaN(date.getTime())) return "Unknown";
  
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -3339,7 +3289,8 @@ function renderDevice(d, index) {
  
   const simInfo = getDisplaySimInfo(d);
  
-  const joinedDate = formatDateOnly(d.joinedAt || d.installTime || 0);
+  // ✅ FIXED: Join time mein proper date aur time with AM/PM dikhega
+  const joinedDateTime = formatDateTimeWithAMPM(d.joinedAt || d.installTime || 0);
   const lastSeen = formatTime(d.lastSeen);
  
   const manualStatus = manualCheckStatus.get(uid);
@@ -3419,7 +3370,7 @@ function renderDevice(d, index) {
           <i class="fas fa-calendar-plus"></i>
           <div class="time-text">
             <span class="time-label">Joined:</span>
-            ${joinedDate}
+            ${joinedDateTime}
           </div>
         </div>
        
